@@ -1,10 +1,11 @@
+
 import 'package:flutter/material.dart';
-import '../widgets/search_bar.dart';
 import '../widgets/custom_bottom_nav.dart';
+import '../widgets/search_bar.dart';
+import 'search_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
+  const HomePage({Key? key}) : super(key: key);
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -12,23 +13,42 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const Center(child: Text("Trang chủ")),
-    const Center(child: Text("Tìm kiếm")),
-    const Center(child: Text("Bộ lọc")),
-    const Center(child: Text("Trang cá nhân")),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        title: const SearchBarWidget(),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SearchBarWidget(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchPage()),
+                  );
+                },
+              ),
+            ),
+
+            const Expanded(
+              child: Center(
+                child: Text("Body nội dung (Home)"),
+              ),
+            ),
+          ],
+        ),
       ),
-      body: _pages[_currentIndex],
-      bottomNavigationBar: CustomBottomNav(
+
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.amber,
+        onPressed: () {},
+        child: const Icon(Icons.add),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+      bottomNavigationBar: CustomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {

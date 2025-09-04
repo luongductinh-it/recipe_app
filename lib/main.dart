@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'features/recipes/presentation/pages/splash_page.dart';
-
-void main() {
+import 'core/di/locator.dart' as di;
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await di.initDependencies();
   runApp(const MyApp());
 }
 

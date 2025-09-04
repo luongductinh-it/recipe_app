@@ -21,11 +21,11 @@ MealModel _$MealModelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$MealModel {
-  @JsonKey(name: 'idMeal')
+  @JsonKey(name: "idMeal")
   String get id => throw _privateConstructorUsedError;
-  @JsonKey(name: 'strMeal')
+  @JsonKey(name: "strMeal")
   String get name => throw _privateConstructorUsedError;
-  @JsonKey(name: 'strMealThumb')
+  @JsonKey(name: "strMealThumb")
   String get thumbnail => throw _privateConstructorUsedError;
 
   /// Serializes this MealModel to a JSON map.
@@ -44,9 +44,9 @@ abstract class $MealModelCopyWith<$Res> {
       _$MealModelCopyWithImpl<$Res, MealModel>;
   @useResult
   $Res call({
-    @JsonKey(name: 'idMeal') String id,
-    @JsonKey(name: 'strMeal') String name,
-    @JsonKey(name: 'strMealThumb') String thumbnail,
+    @JsonKey(name: "idMeal") String id,
+    @JsonKey(name: "strMeal") String name,
+    @JsonKey(name: "strMealThumb") String thumbnail,
   });
 }
 
@@ -99,9 +99,9 @@ abstract class _$$MealModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    @JsonKey(name: 'idMeal') String id,
-    @JsonKey(name: 'strMeal') String name,
-    @JsonKey(name: 'strMealThumb') String thumbnail,
+    @JsonKey(name: "idMeal") String id,
+    @JsonKey(name: "strMeal") String name,
+    @JsonKey(name: "strMealThumb") String thumbnail,
   });
 }
 
@@ -146,22 +146,22 @@ class __$$MealModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$MealModelImpl implements _MealModel {
   const _$MealModelImpl({
-    @JsonKey(name: 'idMeal') required this.id,
-    @JsonKey(name: 'strMeal') required this.name,
-    @JsonKey(name: 'strMealThumb') required this.thumbnail,
+    @JsonKey(name: "idMeal") required this.id,
+    @JsonKey(name: "strMeal") required this.name,
+    @JsonKey(name: "strMealThumb") required this.thumbnail,
   });
 
   factory _$MealModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$MealModelImplFromJson(json);
 
   @override
-  @JsonKey(name: 'idMeal')
+  @JsonKey(name: "idMeal")
   final String id;
   @override
-  @JsonKey(name: 'strMeal')
+  @JsonKey(name: "strMeal")
   final String name;
   @override
-  @JsonKey(name: 'strMealThumb')
+  @JsonKey(name: "strMealThumb")
   final String thumbnail;
 
   @override
@@ -200,22 +200,22 @@ class _$MealModelImpl implements _MealModel {
 
 abstract class _MealModel implements MealModel {
   const factory _MealModel({
-    @JsonKey(name: 'idMeal') required final String id,
-    @JsonKey(name: 'strMeal') required final String name,
-    @JsonKey(name: 'strMealThumb') required final String thumbnail,
+    @JsonKey(name: "idMeal") required final String id,
+    @JsonKey(name: "strMeal") required final String name,
+    @JsonKey(name: "strMealThumb") required final String thumbnail,
   }) = _$MealModelImpl;
 
   factory _MealModel.fromJson(Map<String, dynamic> json) =
       _$MealModelImpl.fromJson;
 
   @override
-  @JsonKey(name: 'idMeal')
+  @JsonKey(name: "idMeal")
   String get id;
   @override
-  @JsonKey(name: 'strMeal')
+  @JsonKey(name: "strMeal")
   String get name;
   @override
-  @JsonKey(name: 'strMealThumb')
+  @JsonKey(name: "strMealThumb")
   String get thumbnail;
 
   /// Create a copy of MealModel
