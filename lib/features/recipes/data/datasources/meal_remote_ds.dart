@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/meal_model.dart';
+import '../models/meal_detail_model.dart';
 
 abstract class MealRemoteDataSource {
   Future<List<MealModel>> getMealsByCategory(String category);
   Future<List<MealModel>> searchMeals(String query);
+  Future<MealDetailModel> getMealDetail(String id);
 }
 
 class MealRemoteDataSourceImpl implements MealRemoteDataSource {
@@ -46,6 +48,22 @@ class MealRemoteDataSourceImpl implements MealRemoteDataSource {
       return [];
     } else {
       throw Exception("Failed to search meals");
+    }
+  }
+
+  @override
+  Future<MealDetailModel> getMealDetail(String id) async {
+    final response =
+        await client.get(Uri.parse("$baseUrl/lookup.php?i=$id"));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['meals'] != null && (data['meals'] as List).isNotEmpty) {
+        return MealDetailModel.fromJson(data['meals'][0]);
+      }
+      throw Exception("Meal not found");
+    } else {
+      throw Exception("Failed to load meal detail");
     }
   }
 }

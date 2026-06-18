@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'home_page.dart';
+import 'main_shell.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -43,8 +43,17 @@ class _SplashPageState extends State<SplashPage> {
                   mealThumb!,
                   fit: BoxFit.cover,
                 )
-              : Container(color: Colors.black12), 
+              : const SizedBox(),
 
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Colors.black54],
+              ),
+            ),
+          ),
           Container(
             alignment: Alignment.bottomCenter,
             padding: const EdgeInsets.all(24),
@@ -62,21 +71,11 @@ class _SplashPageState extends State<SplashPage> {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.yellow[700],
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                  style: Theme.of(context).elevatedButtonTheme.style,
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const HomePage()),
+                      MaterialPageRoute(builder: (_) => const MainShell()),
                     );
                   },
                   child: const Text("Bắt đầu"),

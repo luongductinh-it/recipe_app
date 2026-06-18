@@ -1,18 +1,20 @@
-
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_dimensions.dart';
+import '../../../../core/constants/app_strings.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final TextEditingController? controller;
   final bool autoFocus;
   final ValueChanged<String>? onChanged;
-  final VoidCallback? onTap; 
+  final VoidCallback? onTap;
   const SearchBarWidget({
-    Key? key,
+    super.key,
     this.controller,
     this.autoFocus = false,
     this.onChanged,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,17 +22,18 @@ class SearchBarWidget extends StatelessWidget {
       return GestureDetector(
         onTap: onTap,
         child: Container(
-          height: 48,
+          height: AppDimensions.searchBarHeight,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.greyLight,
+            borderRadius: BorderRadius.circular(AppDimensions.cardBorderRadius),
           ),
           child: Row(
             children: const [
-              Icon(Icons.search, color: Colors.grey),
+              Icon(Icons.search, color: AppColors.greyMedium),
               SizedBox(width: 8),
-              Text("Tìm kiếm sản phẩm", style: TextStyle(color: Colors.grey)),
+              Text(AppStrings.searchHint,
+                  style: TextStyle(color: AppColors.greyMedium)),
             ],
           ),
         ),
@@ -40,12 +43,13 @@ class SearchBarWidget extends StatelessWidget {
       controller: controller,
       autofocus: autoFocus,
       decoration: InputDecoration(
-        hintText: "Tìm kiếm sản phẩm",
-        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+        hintText: AppStrings.searchHint,
+        prefixIcon: const Icon(Icons.search, color: AppColors.greyMedium),
         filled: true,
-        fillColor: Colors.grey[200],
+        fillColor: AppColors.greyLight,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius:
+              BorderRadius.circular(AppDimensions.cardBorderRadius),
           borderSide: BorderSide.none,
         ),
       ),

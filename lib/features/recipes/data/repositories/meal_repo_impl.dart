@@ -1,7 +1,9 @@
-import 'package:recipe_app/features/recipes/data/models/meal_model.dart';
 import '../../domain/entities/meal.dart';
+import '../../domain/entities/meal_detail.dart';
 import '../../domain/repositories/meal_repo.dart';
 import '../datasources/meal_remote_ds.dart';
+import '../models/meal_model.dart';
+import '../models/meal_detail_model.dart';
 
 class MealRepositoryImpl implements MealRepository {
   final MealRemoteDataSource remoteDataSource;
@@ -18,5 +20,11 @@ class MealRepositoryImpl implements MealRepository {
   Future<List<Meal>> searchMeals(String query) async {
     final models = await remoteDataSource.searchMeals(query);
     return models.map((m) => m.toEntity()).toList();
+  }
+
+  @override
+  Future<MealDetail> getMealDetail(String id) async {
+    final model = await remoteDataSource.getMealDetail(id);
+    return model.toEntity();
   }
 }

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/locator.dart';
-import 'features/recipes/presentation/bloc/meal_list_bloc/meal_list_bloc.dart';
+import 'core/theme/app_theme.dart';
 import 'features/recipes/domain/usecases/get_meals_by_category.dart';
+import 'features/recipes/domain/usecases/get_meal_detail.dart';
+import 'features/recipes/presentation/bloc/meal_list_bloc/meal_list_bloc.dart';
+import 'features/recipes/presentation/bloc/meal_detail_bloc/meal_detail_bloc.dart';
+import 'features/recipes/presentation/pages/splash_page.dart';
 import 'features/recipes/presentation/pages/home_page.dart';
+import 'features/recipes/presentation/pages/search_page.dart';
+import 'features/recipes/presentation/pages/meal_detail_page.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,12 +21,39 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (_) => MealListBloc(sl<GetMealsByCategory>()),
         ),
+        BlocProvider(
+          create: (_) => MealDetailBloc(sl<GetMealDetail>()),
+        ),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Recipe App',
-        theme: ThemeData(primarySwatch: Colors.teal),
-        home: const HomePage(),
+        theme: AppTheme.lightTheme,
+        onGenerateRoute: AppRoutes.generateRoute,
+        home: const SplashPage(),
       ),
     );
+  }
+}
+
+class AppRoutes {
+  static const String home = '/home';
+  static const String search = '/search';
+  static const String mealDetail = '/meal-detail';
+
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case home:
+        return MaterialPageRoute(builder: (_) => const HomePage());
+      case search:
+        return MaterialPageRoute(builder: (_) => const SearchPage());
+      case mealDetail:
+        final mealId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => MealDetailPage(mealId: mealId),
+        );
+      default:
+        return MaterialPageRoute(builder: (_) => const SplashPage());
+    }
   }
 }
