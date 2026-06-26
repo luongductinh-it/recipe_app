@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
 class InfoRow extends StatelessWidget {
   final IconData icon;
@@ -15,18 +14,20 @@ class InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.accentAmber),
+          Icon(icon, size: 22, color: theme.colorScheme.primary),
           const SizedBox(width: 12),
-          Text(label, style: const TextStyle(fontSize: 16)),
+          Text(label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              )),
           const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 16, color: AppColors.greyDark),
-          ),
+          Text(value,
+              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
     );

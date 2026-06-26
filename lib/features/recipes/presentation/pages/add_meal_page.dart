@@ -22,6 +22,7 @@ class AddMealPage extends StatefulWidget {
 }
 
 class _AddMealPageState extends State<AddMealPage> {
+  int _currentStep = 0;
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _thumbnailController = TextEditingController();
@@ -81,7 +82,6 @@ class _AddMealPageState extends State<AddMealPage> {
         maxHeight: 1024,
         imageQuality: 85,
       );
-
       if (pickedFile == null) return;
 
       try {
@@ -90,7 +90,6 @@ class _AddMealPageState extends State<AddMealPage> {
             'recipe_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final savedPath = '${appDir.path}${Platform.pathSeparator}$fileName';
         final savedFile = await File(pickedFile.path).copy(savedPath);
-
         setState(() {
           _localImagePath = savedFile.path;
           _thumbnailController.clear();
@@ -107,10 +106,7 @@ class _AddMealPageState extends State<AddMealPage> {
       debugPrint('Image picker error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not pick image: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+          SnackBar(content: Text('Could not pick image: $e')),
         );
       }
     }
@@ -119,9 +115,7 @@ class _AddMealPageState extends State<AddMealPage> {
   void _clearImage() {
     setState(() {
       if (_localImagePath != null) {
-        try {
-          File(_localImagePath!).deleteSync();
-        } catch (_) {}
+        try { File(_localImagePath!).deleteSync(); } catch (_) {}
         _localImagePath = null;
       }
       _thumbnailController.clear();
@@ -152,7 +146,6 @@ class _AddMealPageState extends State<AddMealPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final thumbnail = _localImagePath ?? _thumbnailController.text.trim();
-
     final meal = UserMeal(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
@@ -172,7 +165,6 @@ class _AddMealPageState extends State<AddMealPage> {
 
     if (!mounted) return;
     context.read<CustomMealBloc>().add(SaveCustomMealEvent(meal));
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text(AppStrings.savedSuccess)),
     );
@@ -203,231 +195,292 @@ class _AddMealPageState extends State<AddMealPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return PopScope(
       canPop: !_isDirty,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         final shouldPop = await _onWillPop();
-        if (shouldPop && context.mounted) {
-          Navigator.pop(context);
-        }
+        if (shouldPop && context.mounted) Navigator.pop(context);
       },
       child: Scaffold(
         appBar: AppBar(
           title: const Text(AppStrings.addMealTitle),
-          backgroundColor: Colors.amber,
+          backgroundColor: theme.colorScheme.primary,
           foregroundColor: Colors.white,
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildImagePreview(),
-                const SizedBox(height: 8),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _imageButton(
-                      icon: Icons.photo_library,
-                      label: 'Gallery',
-                      onTap: () => _pickImage(ImageSource.gallery),
-                    ),
-                    const SizedBox(width: 12),
-                    _imageButton(
-                      icon: Icons.camera_alt,
-                      label: 'Camera',
-                      onTap: () => _pickImage(ImageSource.camera),
-                    ),
-                    if (_localImagePath != null || _thumbnailController.text.isNotEmpty) ...[
-                      const SizedBox(width: 12),
-                      _imageButton(
-                        icon: Icons.clear,
-                        label: 'Clear',
-                        color: Colors.red,
-                        onTap: _clearImage,
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'or paste URL',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      ),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: _thumbnailController,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.thumbnailUrl,
-                    hintText: AppStrings.thumbnailUrlHint,
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.link),
+        body: Form(
+          key: _formKey,
+          child: Stepper(
+            currentStep: _currentStep,
+            onStepContinue: _currentStep < 2
+                ? () => setState(() => _currentStep++)
+                : _save,
+            onStepCancel: _currentStep > 0
+                ? () => setState(() => _currentStep--)
+                : null,
+            onStepTapped: (s) => setState(() => _currentStep = s),
+            controlsBuilder: (ctx, details) => Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: details.onStepContinue,
+                    child: Text(_currentStep == 2 ? AppStrings.save : 'Continue'),
                   ),
-                  keyboardType: TextInputType.url,
-                ),
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.mealName,
-                    hintText: AppStrings.mealNameHint,
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.restaurant),
-                  ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? AppStrings.recipeRequired : null,
-                  textCapitalization: TextCapitalization.words,
-                ),
-                const SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _categoryController,
-                        decoration: const InputDecoration(
-                          labelText: AppStrings.mealCategory,
-                          hintText: AppStrings.mealCategoryHint,
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.category),
-                        ),
-                        textCapitalization: TextCapitalization.words,
-                      ),
+                  if (details.onStepCancel != null)
+                    TextButton(
+                      onPressed: details.onStepCancel,
+                      child: const Text('Back'),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _areaController,
-                        decoration: const InputDecoration(
-                          labelText: AppStrings.mealArea,
-                          hintText: AppStrings.mealAreaHint,
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.public),
-                        ),
-                        textCapitalization: TextCapitalization.words,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AppStrings.ingredients,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: _addIngredient,
-                      icon: const Icon(Icons.add),
-                      label: const Text(AppStrings.addIngredient),
-                    ),
-                  ],
-                ),
-                ..._buildIngredientFields(),
-                const SizedBox(height: 20),
-
-                const Text(
-                  'Instructions',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _instructionsController,
-                  decoration: const InputDecoration(
-                    hintText: AppStrings.instructionsHint,
-                    border: OutlineInputBorder(),
-                    alignLabelWithHint: true,
-                  ),
-                  maxLines: 5,
-                  keyboardType: TextInputType.multiline,
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-                const SizedBox(height: 24),
-
-                ElevatedButton(
-                  onPressed: _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    AppStrings.save,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
+                ],
+              ),
             ),
+            steps: [
+              Step(
+                title: const Text('Image'),
+                isActive: _currentStep >= 0,
+                state: _localImagePath != null || _thumbnailController.text.isNotEmpty
+                    ? StepState.complete
+                    : StepState.indexed,
+                content: _stepImage(theme),
+              ),
+              Step(
+                title: const Text('Details'),
+                isActive: _currentStep >= 1,
+                state: _nameController.text.trim().isNotEmpty
+                    ? StepState.complete
+                    : StepState.indexed,
+                content: _stepDetails(theme),
+              ),
+              Step(
+                title: const Text('Ingredients & Instructions'),
+                isActive: _currentStep >= 2,
+                state: _ingredients.isNotEmpty && _instructionsController.text.isNotEmpty
+                    ? StepState.complete
+                    : StepState.indexed,
+                content: _stepIngredientsInstructions(theme),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _imageButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color color = Colors.amber,
-  }) {
+  Widget _stepImage(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildImagePreview(theme),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _imageBtn(Icons.photo_library, 'Gallery', theme.colorScheme.primary,
+                () => _pickImage(ImageSource.gallery)),
+            const SizedBox(width: 12),
+            _imageBtn(Icons.camera_alt, 'Camera', theme.colorScheme.primary,
+                () => _pickImage(ImageSource.camera)),
+            if (_localImagePath != null || _thumbnailController.text.isNotEmpty) ...[
+              const SizedBox(width: 12),
+              _imageBtn(Icons.clear, 'Clear', Colors.red, _clearImage),
+            ],
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: Divider(color: theme.dividerColor)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text('or paste URL',
+                  style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 12)),
+            ),
+            Expanded(child: Divider(color: theme.dividerColor)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _thumbnailController,
+          decoration: const InputDecoration(
+            labelText: AppStrings.thumbnailUrl,
+            hintText: AppStrings.thumbnailUrlHint,
+            prefixIcon: Icon(Icons.link),
+          ),
+          keyboardType: TextInputType.url,
+        ),
+      ],
+    );
+  }
+
+  Widget _stepDetails(ThemeData theme) {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            labelText: AppStrings.mealName,
+            hintText: AppStrings.mealNameHint,
+            prefixIcon: Icon(Icons.restaurant),
+          ),
+          validator: (v) => (v == null || v.trim().isEmpty) ? AppStrings.recipeRequired : null,
+          textCapitalization: TextCapitalization.words,
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _categoryController,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.mealCategory,
+                  hintText: AppStrings.mealCategoryHint,
+                  prefixIcon: Icon(Icons.category),
+                ),
+                textCapitalization: TextCapitalization.words,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: _areaController,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.mealArea,
+                  hintText: AppStrings.mealAreaHint,
+                  prefixIcon: Icon(Icons.public),
+                ),
+                textCapitalization: TextCapitalization.words,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _stepIngredientsInstructions(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Ingredients', style: theme.textTheme.titleMedium),
+            TextButton.icon(
+              onPressed: _addIngredient,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text(AppStrings.addIngredient),
+            ),
+          ],
+        ),
+        if (_ingredients.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text('No ingredients added yet',
+                style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+          )
+        else
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _ingredients.length,
+            onReorderItem: (oldI, newI) {
+              setState(() {
+                final item = _ingredients.removeAt(oldI);
+                _ingredients.insert(newI, item);
+              });
+            },
+            itemBuilder: (_, i) {
+              final ing = _ingredients[i];
+              return Padding(
+                key: ValueKey(ing.hashCode),
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    ReorderableDragStartListener(
+                      index: i,
+                      child: Icon(Icons.drag_handle, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      flex: 3,
+                      child: TextFormField(
+                        controller: ing.nameController,
+                        decoration: InputDecoration(
+                          labelText: '${AppStrings.ingredientName} ${i + 1}',
+                          isDense: true,
+                        ),
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        controller: ing.measureController,
+                        decoration: const InputDecoration(
+                          labelText: AppStrings.ingredientMeasure,
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.remove_circle, color: Colors.red[400], size: 20),
+                      onPressed: () => _removeIngredient(i),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        const SizedBox(height: 16),
+        Text('Instructions', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _instructionsController,
+          decoration: const InputDecoration(
+            hintText: AppStrings.instructionsHint,
+            alignLabelWithHint: true,
+          ),
+          maxLines: 5,
+          keyboardType: TextInputType.multiline,
+          textCapitalization: TextCapitalization.sentences,
+        ),
+      ],
+    );
+  }
+
+  Widget _imageBtn(IconData icon, String label, Color color, VoidCallback onTap) {
     return ElevatedButton.icon(
       onPressed: onTap,
       icon: Icon(icon, size: 18),
       label: Text(label, style: const TextStyle(fontSize: 13)),
       style: ElevatedButton.styleFrom(
         backgroundColor: color.withValues(alpha: 0.15),
-        foregroundColor: color.withValues(alpha: 1.0),
+        foregroundColor: color,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 0,
       ),
     );
   }
 
-  Widget _buildImagePreview() {
+  Widget _buildImagePreview(ThemeData theme) {
     if (_localImagePath != null) {
       return Container(
         height: 180,
         decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(12),
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(14),
         ),
         clipBehavior: Clip.antiAlias,
         width: double.infinity,
         child: Image.file(
           File(_localImagePath!),
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildPlaceholder(),
+          errorBuilder: (_, __, ___) => _placeholder(theme),
         ),
       );
     }
@@ -436,13 +489,13 @@ class _AddMealPageState extends State<AddMealPage> {
     return Container(
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
       ),
       clipBehavior: Clip.antiAlias,
       width: double.infinity,
       child: url.isEmpty
-          ? _buildPlaceholder()
+          ? _placeholder(theme)
           : CachedNetworkImage(
               imageUrl: url,
               fit: BoxFit.cover,
@@ -454,8 +507,7 @@ class _AddMealPageState extends State<AddMealPage> {
                   children: [
                     CircularProgressIndicator(strokeWidth: 3),
                     SizedBox(height: 8),
-                    Text('Loading...',
-                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text('Loading...', style: TextStyle(color: Colors.grey, fontSize: 12)),
                   ],
                 ),
               ),
@@ -465,8 +517,7 @@ class _AddMealPageState extends State<AddMealPage> {
                   children: [
                     Icon(Icons.broken_image, size: 48, color: Colors.grey),
                     SizedBox(height: 8),
-                    Text('Invalid image URL',
-                        style: TextStyle(color: Colors.grey)),
+                    Text('Invalid image URL', style: TextStyle(color: Colors.grey)),
                   ],
                 ),
               ),
@@ -474,71 +525,19 @@ class _AddMealPageState extends State<AddMealPage> {
     );
   }
 
-  Widget _buildPlaceholder() {
-    return const Center(
+  Widget _placeholder(ThemeData theme) {
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.image_outlined, size: 48, color: Colors.grey),
-          SizedBox(height: 8),
-          Text('Image preview', style: TextStyle(color: Colors.grey)),
+          Icon(Icons.image_outlined, size: 48,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+          const SizedBox(height: 8),
+          Text('Image preview',
+              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
         ],
       ),
     );
-  }
-
-  List<Widget> _buildIngredientFields() {
-    if (_ingredients.isEmpty) {
-      return [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            'No ingredients added yet',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ),
-      ];
-    }
-
-    return List.generate(_ingredients.length, (index) {
-      final ing = _ingredients[index];
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: TextFormField(
-                controller: ing.nameController,
-                decoration: InputDecoration(
-                  labelText: '${AppStrings.ingredientName} ${index + 1}',
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-                textCapitalization: TextCapitalization.sentences,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 2,
-              child: TextFormField(
-                controller: ing.measureController,
-                decoration: const InputDecoration(
-                  labelText: AppStrings.ingredientMeasure,
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              icon: Icon(Icons.remove_circle, color: Colors.red),
-              onPressed: () => _removeIngredient(index),
-            ),
-          ],
-        ),
-      );
-    });
   }
 }
 

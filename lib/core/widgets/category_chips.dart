@@ -16,6 +16,7 @@ class CategoryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SizedBox(
       height: AppDimensions.categoryChipHeight,
       child: ListView.builder(
@@ -31,6 +32,7 @@ class CategoryChips extends StatelessWidget {
               label: Text(cat),
               selected: isSelected,
               selectedColor: AppColors.chipSelected,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
               onSelected: (_) {
                 if (!isSelected) onCategorySelected(cat);
               },

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/di/locator.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_cubit.dart';
 import 'features/recipes/domain/usecases/get_custom_meals.dart';
 import 'features/recipes/domain/usecases/get_favorites.dart';
 import 'features/recipes/domain/usecases/get_meal_detail.dart';
@@ -24,12 +26,14 @@ import 'features/recipes/presentation/pages/search_page.dart';
 import 'features/recipes/presentation/pages/meal_detail_page.dart';
 
 class App extends StatelessWidget {
-  const App({super.key});
+  final SharedPreferences prefs;
+  const App({super.key, required this.prefs});
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider(create: (_) => ThemeCubit(prefs)),
         BlocProvider(
           create: (_) => MealListBloc(sl<GetMealsByCategory>()),
         ),
@@ -58,12 +62,16 @@ class App extends StatelessWidget {
           create: (_) => SplashBloc(sl()),
         ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Recipe App',
-        theme: AppTheme.lightTheme,
-        onGenerateRoute: AppRoutes.generateRoute,
-        home: const SplashPage(),
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Recipe App',
+          themeMode: themeMode,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          onGenerateRoute: AppRoutes.generateRoute,
+          home: const SplashPage(),
+        ),
       ),
     );
   }

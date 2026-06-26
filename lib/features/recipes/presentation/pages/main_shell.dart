@@ -23,9 +23,9 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -36,7 +36,8 @@ class _MainShellState extends State<MainShell> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.amber,
+        backgroundColor: theme.colorScheme.secondary,
+        foregroundColor: Colors.black,
         onPressed: () async {
           await Navigator.push(
             context,
