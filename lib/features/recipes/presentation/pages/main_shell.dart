@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/favorites_bloc/favorites_bloc.dart';
+import '../bloc/favorites_bloc/favorites_event.dart';
+import '../bloc/custom_meal_bloc/custom_meal_bloc.dart';
+import '../bloc/custom_meal_bloc/custom_meal_event.dart';
 import '../widgets/custom_bottom_nav.dart';
+import 'add_meal_page.dart';
 import 'home_page.dart';
 import 'search_page.dart';
 import 'favorites_page.dart';
@@ -14,7 +20,6 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
-  final _favoritesKey = GlobalKey<FavoritesPageState>();
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +31,20 @@ class _MainShellState extends State<MainShell> {
         children: [
           HomePage(onSearchTap: () => setState(() => _currentIndex = 1)),
           const SearchPage(),
-          FavoritesPage(key: _favoritesKey),
+          const FavoritesPage(),
           const ProfilePage(),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.amber,
-        onPressed: () {},
+        onPressed: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddMealPage()),
+          );
+          if (!context.mounted) return;
+          context.read<CustomMealBloc>().add(LoadCustomMeals());
+        },
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -43,7 +55,7 @@ class _MainShellState extends State<MainShell> {
             _currentIndex = index;
           });
           if (index == 2) {
-            _favoritesKey.currentState?.refresh();
+            context.read<FavoritesBloc>().add(LoadFavorites());
           }
         },
       ),

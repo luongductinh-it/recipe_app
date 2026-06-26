@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:recipe_app/core/di/locator.dart';
-import 'package:recipe_app/features/recipes/domain/entities/meal.dart';
-import 'package:recipe_app/features/recipes/domain/usecases/search_meals.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/search_bloc/search_bloc.dart';
+import '../bloc/search_bloc/search_state.dart';
 import '../widgets/search_bar.dart';
 import '../../../../core/widgets/meal_grid.dart';
 
@@ -14,26 +14,11 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _controller = TextEditingController();
-  List<Meal> _results = [];
-  bool _isLoading = false;
 
-  Future<void> _searchMeals(String query) async {
-    if (query.isEmpty) {
-      setState(() => _results = []);
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final useCase = sl<SearchMeals>();
-      final meals = await useCase(query);
-      setState(() => _results = meals);
-    } catch (e) {
-      debugPrint("Search error: $e");
-    } finally {
-      setState(() => _isLoading = false);
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,17 +31,27 @@ class _SearchPageState extends State<SearchPage> {
             child: SearchBarWidget(
               controller: _controller,
               autoFocus: true,
-              onChanged: _searchMeals,
+              onChanged: (query) =>
+                  context.read<SearchBloc>().search(query),
             ),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _results.isEmpty
-                    ? const Center(
-                        child: Text('Search for a meal'),
-                      )
-                    : MealGridView(meals: _results),
+            child: BlocBuilder<SearchBloc, SearchState>(
+              builder: (context, state) {
+                if (state is SearchLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is SearchLoaded) {
+                  final results = state.results;
+                  if (results.isEmpty) {
+                    return const Center(child: Text('No results found'));
+                  }
+                  return MealGridView(meals: results);
+                }
+                return const Center(
+                  child: Text('Search for a meal'),
+                );
+              },
+            ),
           ),
         ],
       ),

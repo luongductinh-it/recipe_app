@@ -1,8 +1,14 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:recipe_app/core/constants/app_strings.dart';
+import 'package:recipe_app/features/recipes/domain/entities/user_meal.dart';
 import '../bloc/meal_list_bloc/meal_list_bloc.dart';
 import '../bloc/meal_list_bloc/meal_list_event.dart';
 import '../bloc/meal_list_bloc/meal_list_state.dart';
+import '../bloc/custom_meal_bloc/custom_meal_bloc.dart';
+import '../bloc/custom_meal_bloc/custom_meal_event.dart';
+import '../bloc/custom_meal_bloc/custom_meal_state.dart';
 import '../widgets/search_bar.dart';
 import '../../../../core/widgets/category_chips.dart';
 import '../../../../core/widgets/meal_grid.dart';
@@ -31,6 +37,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     context.read<MealListBloc>().add(LoadMealsByCategory(_selectedCategory));
+    context.read<CustomMealBloc>().add(LoadCustomMeals());
   }
 
   @override
@@ -43,6 +50,14 @@ class _HomePageState extends State<HomePage> {
             child: SearchBarWidget(
               onTap: widget.onSearchTap,
             ),
+          ),
+          BlocBuilder<CustomMealBloc, CustomMealState>(
+            builder: (context, state) {
+              if (state is CustomMealLoaded && state.meals.isNotEmpty) {
+                return _buildMyRecipesSection(state.meals);
+              }
+              return const SizedBox.shrink();
+            },
           ),
           CategoryChips(
             categories: _categories,
@@ -79,6 +94,82 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMyRecipesSection(List<UserMeal> meals) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(
+            AppStrings.myRecipes,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 140,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: meals.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final meal = meals[index];
+              return SizedBox(
+                width: 120,
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: meal.thumbnail.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: meal.thumbnail,
+                                fit: BoxFit.cover,
+                                memCacheWidth: 240,
+                                placeholder: (_, __) => const Center(
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2),
+                                ),
+                                errorWidget: (_, __, ___) => const Center(
+                                  child: Icon(Icons.restaurant, size: 32),
+                                ),
+                              )
+                            : const Center(
+                                child: Icon(Icons.restaurant, size: 32),
+                              ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Text(
+                          meal.name,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const Divider(height: 1),
+      ],
     );
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:recipe_app/core/di/locator.dart';
-import 'package:recipe_app/features/recipes/data/services/favorite_service.dart';
-import 'package:recipe_app/features/recipes/domain/entities/meal.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/favorites_bloc/favorites_bloc.dart';
+import '../bloc/favorites_bloc/favorites_event.dart';
+import '../bloc/favorites_bloc/favorites_state.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/meal_grid.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -14,23 +15,14 @@ class FavoritesPage extends StatefulWidget {
 }
 
 class FavoritesPageState extends State<FavoritesPage> {
-  List<Meal> _favorites = [];
-  bool _loaded = false;
-
   @override
   void initState() {
     super.initState();
-    refresh();
+    context.read<FavoritesBloc>().add(LoadFavorites());
   }
 
-  Future<void> refresh() async {
-    final favorites = await sl<FavoriteService>().getFavorites();
-    if (mounted) {
-      setState(() {
-        _favorites = favorites;
-        _loaded = true;
-      });
-    }
+  void refresh() {
+    context.read<FavoritesBloc>().add(LoadFavorites());
   }
 
   @override
@@ -50,14 +42,25 @@ class FavoritesPageState extends State<FavoritesPage> {
             ),
           ),
           Expanded(
-            child: !_loaded
-                ? const Center(child: CircularProgressIndicator())
-                : _favorites.isEmpty
-                    ? const EmptyState(
-                        icon: Icons.bookmark_border,
-                        message: AppStrings.emptyFavorites,
-                      )
-                    : MealGridView(meals: _favorites),
+            child: BlocBuilder<FavoritesBloc, FavoritesState>(
+              builder: (context, state) {
+                if (state is FavoritesLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is FavoritesLoaded) {
+                  final favorites = state.favorites;
+                  if (favorites.isEmpty) {
+                    return const EmptyState(
+                      icon: Icons.bookmark_border,
+                      message: AppStrings.emptyFavorites,
+                    );
+                  }
+                  return MealGridView(meals: favorites);
+                } else if (state is FavoritesError) {
+                  return Center(child: Text(state.message));
+                }
+                return const SizedBox.shrink();
+              },
+            ),
           ),
         ],
       ),
